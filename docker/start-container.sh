@@ -7,6 +7,11 @@ fi
 
 mkdir -p storage/logs bootstrap/cache
 
+if [ ! -f vendor/autoload.php ]; then
+    echo "vendor/autoload.php not found, running composer install..." >&2
+    composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+fi
+
 if ! grep -q '^APP_KEY=base64:' .env; then
     php artisan key:generate --force --no-interaction
 fi
