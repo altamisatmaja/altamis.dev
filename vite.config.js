@@ -15,19 +15,16 @@ function obfuscateProductionBundle() {
 
                 const result = JavaScriptObfuscator.obfuscate(output.code, {
                     compact: true,
-                    controlFlowFlattening: true,
-                    controlFlowFlatteningThreshold: 0.35,
-                    deadCodeInjection: true,
-                    deadCodeInjectionThreshold: 0.1,
                     identifierNamesGenerator: 'hexadecimal',
                     renameGlobals: false,
-                    selfDefending: true,
-                    splitStrings: true,
-                    splitStringsChunkLength: 8,
                     stringArray: true,
-                    stringArrayEncoding: ['base64'],
-                    stringArrayThreshold: 0.75,
-                    transformObjectKeys: true,
+                    stringArrayEncoding: [],
+                    stringArrayThreshold: 0.5,
+                    splitStrings: false,
+                    selfDefending: false,
+                    controlFlowFlattening: false,
+                    deadCodeInjection: false,
+                    transformObjectKeys: false,
                     unicodeEscapeSequence: false,
                 });
 
@@ -38,19 +35,23 @@ function obfuscateProductionBundle() {
     };
 }
 
-export default defineConfig(({ mode }) => ({
-    plugins: [
-        laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
-            refresh: true,
-        }),
-        tailwindcss(),
-        svelte(),
-        ...(mode === 'production' ? [obfuscateProductionBundle()] : []),
-    ],
-    server: {
-        watch: {
-            ignored: ['**/storage/framework/views/**'],
+export default defineConfig(({ mode }) => {
+    const shouldObfuscate = mode === 'production';
+
+    return {
+        plugins: [
+            laravel({
+                input: ['resources/css/app.css', 'resources/js/app.js'],
+                refresh: true,
+            }),
+            tailwindcss(),
+            svelte(),
+            ...(shouldObfuscate ? [obfuscateProductionBundle()] : []),
+        ],
+        server: {
+            watch: {
+                ignored: ['**/storage/framework/views/**'],
+            },
         },
-    },
-}));
+    };
+});
