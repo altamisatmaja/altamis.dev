@@ -14,6 +14,7 @@
 }
 
 :root {
+    --mobile-dock-shell-height: 5.15rem;
     --page-bg: #f4f5f7;
     --surface-1: #ffffff;
     --surface-2: #f5f5f7;
@@ -129,8 +130,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 5.2rem;
-        height: 6.15rem;
+        width: 4.95rem;
+        height: 5.9rem;
         padding: 0;
         border: 0;
         border-radius: 1.8rem;
@@ -157,8 +158,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 2.6rem;
-        height: 4rem;
+        width: 2.5rem;
+        height: 3.85rem;
         border-radius: 1.35rem;
         background:
             linear-gradient(180deg, rgba(226, 229, 235, 0.98), rgba(247, 248, 250, 0.98) 18%, rgba(237, 239, 243, 0.94));
@@ -185,9 +186,9 @@
         flex-direction: column;
         align-items: center;
         justify-content: space-between;
-        width: 2.05rem;
-        height: 2.9rem;
-        padding: 0.68rem 0;
+        width: 1.98rem;
+        height: 2.78rem;
+        padding: 0.64rem 0;
         border-radius: 1.1rem;
         background:
             linear-gradient(180deg, #fdfdfd 0%, #ffffff 58%, #eceef1 100%);
@@ -206,7 +207,7 @@
     }
 
     .theme-switch--dark .theme-switch__thumb {
-        transform: translateY(-0.86rem);
+        transform: translateY(-0.8rem);
     }
 
     .theme-switch__glyph {
@@ -228,5 +229,44 @@
         border-radius: 999px;
         border: 0.14rem solid var(--accent);
         box-shadow: 0 0 0 0.08rem rgba(255, 143, 40, 0.08);
+    }
+}
+
+@media (max-width: 639px) {
+    @layer components {
+        .theme-switch {
+            width: 3.75rem;
+            height: var(--mobile-dock-shell-height);
+            border-radius: 1.35rem;
+        }
+
+        .theme-switch__track {
+            width: 2rem;
+            height: 3.42rem;
+            border-radius: 1rem;
+        }
+
+        .theme-switch__thumb {
+            left: 0.22rem;
+            bottom: 0.22rem;
+            width: 1.58rem;
+            height: 2.46rem;
+            padding: 0.54rem 0;
+            border-radius: 0.9rem;
+        }
+
+        .theme-switch--dark .theme-switch__thumb {
+            transform: translateY(-0.8rem);
+        }
+
+        .theme-switch__glyph--line {
+            height: 0.56rem;
+        }
+
+        .theme-switch__glyph--ring {
+            width: 0.6rem;
+            height: 0.6rem;
+            border-width: 0.12rem;
+        }
     }
 }

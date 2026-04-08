@@ -9,12 +9,34 @@
   let dockItems = [];
   let dockEffects = [];
   let dockList;
+  let isCompact = false;
 
-  const EFFECT_RADIUS = 110;
-  const MAX_SCALE = 1.72;
-  const MAX_LIFT = 28;
-  const MAX_MARGIN = 12;
-  const DOCK_ITEM_SIZE = 56;
+  function getDockMetrics() {
+    return isCompact
+      ? {
+          effectRadius: 72,
+          maxScale: 1.18,
+          maxLift: 10,
+          maxMargin: 4,
+          itemSize: 44,
+          paddingIdle: 12,
+          paddingActive: 16,
+        }
+      : {
+          effectRadius: 110,
+          maxScale: 1.72,
+          maxLift: 28,
+          maxMargin: 12,
+          itemSize: 56,
+          paddingIdle: 20,
+          paddingActive: 28,
+        };
+  }
+
+  function syncViewport() {
+    isCompact = window.innerWidth < 640;
+    resetDockEffects();
+  }
 
   const items = [
     {
@@ -77,6 +99,8 @@
   function updateDockEffects(clientX) {
     if (!dockList) return;
 
+    const { effectRadius, maxScale, maxLift, maxMargin } = getDockMetrics();
+
     const dockRect = dockList.getBoundingClientRect();
     const pointerX = clientX - dockRect.left;
 
@@ -89,7 +113,7 @@
 
       const centerX = item.offsetLeft + item.offsetWidth / 2;
       const distance = Math.abs(pointerX - centerX);
-      const influence = clamp(1 - distance / EFFECT_RADIUS, 0, 1);
+      const influence = clamp(1 - distance / effectRadius, 0, 1);
       const eased = Math.sin((influence * Math.PI) / 2);
 
       if (eased > strongestInfluence) {
@@ -98,18 +122,19 @@
       }
 
       return {
-        scale: 1 + eased * (MAX_SCALE - 1),
-        translateY: -eased * MAX_LIFT,
-        marginX: eased * MAX_MARGIN,
+        scale: 1 + eased * (maxScale - 1),
+        translateY: -eased * maxLift,
+        marginX: eased * maxMargin,
         zIndex: 1 + Math.round(eased * 100),
       };
     });
 
-    hoveredIndex = strongestInfluence > 0.14 ? nextHoveredIndex : -1;
+    hoveredIndex = strongestInfluence > (isCompact ? 0.22 : 0.14) ? nextHoveredIndex : -1;
   }
 
   function getTooltipTranslateY(effect) {
-    const scaledHeightLift = DOCK_ITEM_SIZE * (effect.scale - 1);
+    const { itemSize } = getDockMetrics();
+    const scaledHeightLift = itemSize * (effect.scale - 1);
     return effect.translateY - scaledHeightLift - 6;
   }
 
@@ -128,7 +153,9 @@
   const sectionIds = ['home', 'works', 'about'];
 
   onMount(() => {
+    syncViewport();
     resetDockEffects();
+    window.addEventListener('resize', syncViewport);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -142,12 +169,15 @@
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', syncViewport);
+    };
   });
 </script>
 
-<nav class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-  <div class="flex items-end gap-4">
+<nav class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 sm:bottom-8">
+  <div class="flex items-end gap-2 sm:gap-4">
     <div class="relative overflow-visible">
       <div
         aria-hidden="true"
@@ -161,9 +191,9 @@
 
       <div
         bind:this={dockList}
-        class="relative flex items-end gap-3 overflow-visible py-4"
+        class="relative flex items-end overflow-visible py-3 sm:py-4"
         role="presentation"
-        style="padding-left: {hoveredIndex !== -1 ? 28 : 20}px; padding-right: {hoveredIndex !== -1 ? 28 : 20}px; transition: padding 0.2s cubic-bezier(0.34,1.56,0.64,1);"
+        style="min-height: {isCompact ? 'var(--mobile-dock-shell-height)' : 'auto'}; gap: {isCompact ? 6 : 12}px; padding-left: {hoveredIndex !== -1 ? getDockMetrics().paddingActive : getDockMetrics().paddingIdle}px; padding-right: {hoveredIndex !== -1 ? getDockMetrics().paddingActive : getDockMetrics().paddingIdle}px; transition: padding 0.2s cubic-bezier(0.34,1.56,0.64,1);"
         on:pointerenter={handleDockPointerEnter}
         on:pointermove={handleDockPointerMove}
         on:pointerleave={handleDockPointerLeave}
@@ -180,7 +210,7 @@
           >
 
             <!-- Tooltip -->
-            {#if hoveredIndex === i}
+            {#if hoveredIndex === i && !isCompact}
               <div
                 class="nav-tooltip pointer-events-none absolute -top-12 left-1/2 text-sm font-medium px-3 py-1.5 rounded-[18px] whitespace-nowrap shadow-xl"
                 style="background: var(--nav-item); color: var(--nav-tooltip-text); border: 1px solid var(--line-soft); transform: translateX(-50%) translateY({getTooltipTranslateY(effect)}px);"
@@ -195,9 +225,9 @@
                 href={item.href}
                 aria-label={item.label}
                 on:click={() => { if (!item.href.startsWith('mailto')) active = item.id; }}
-                class="relative flex items-center justify-center w-14 h-14 rounded-[18px] transition-colors duration-150
+                class="relative flex items-center justify-center rounded-[16px] sm:rounded-[18px] transition-colors duration-150
                   {isActive ? 'text-white' : 'hover:text-white'}"
-                style="background: {isActive ? 'var(--accent-strong)' : 'var(--nav-item)'}; color: {isActive ? 'var(--text-contrast)' : 'var(--nav-text)'}; transform: translateY({effect.translateY}px) scale({effect.scale}); transform-origin: center bottom; will-change: transform; transition: transform 0.22s cubic-bezier(0.22,1,0.36,1), background-color 0.15s ease, color 0.15s ease;"
+                style="width: {getDockMetrics().itemSize}px; height: {getDockMetrics().itemSize}px; background: {isActive ? 'var(--accent-strong)' : 'var(--nav-item)'}; color: {isActive ? 'var(--text-contrast)' : 'var(--nav-text)'}; transform: translateY({effect.translateY}px) scale({effect.scale}); transform-origin: center bottom; will-change: transform; transition: transform 0.22s cubic-bezier(0.22,1,0.36,1), background-color 0.15s ease, color 0.15s ease;"
               >
                 <span class="nav-icon flex items-center justify-center">
                   {@html item.icon}
