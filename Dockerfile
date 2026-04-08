@@ -9,7 +9,7 @@ COPY resources ./resources
 COPY vite.config.js svelte.config.js ./
 RUN npm run build
 
-FROM php:8.3-cli-bookworm
+FROM php:8.4-cli-bookworm
 
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
     APP_ENV=production \
@@ -51,7 +51,7 @@ COPY docker/start-container.sh /usr/local/bin/start-container
 RUN mkdir -p storage/logs bootstrap/cache \
     && chmod -R ug+rwx storage bootstrap/cache \
     && composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader \
-    && php artisan storage:link || true \
+    && (php artisan storage:link || true) \
     && chmod +x /usr/local/bin/start-container
 
 EXPOSE 8000
